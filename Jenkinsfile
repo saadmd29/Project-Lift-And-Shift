@@ -24,4 +24,3 @@ pipeline {
                sh ' docker  login --username  saadmd29 --password "Azian@123" && docker push saadmd29/php:v1 ' 
             }
         }
-                
