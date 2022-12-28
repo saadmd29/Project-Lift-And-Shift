@@ -1,34 +1,29 @@
 pipeline {
     agent any 
     stages {
-        stage('Cloning Git') {    
+        stage('configureing kubectl') {    
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/saadmd29/Project-Lift-And-Shift.git']]])
+                sh 'cat ${HOME}/.kube/config'
             }
         }
-        stage('BUILD') {    
+        stage('building Image') {    
             steps {
-               sh 'mvn clean install -DskipTests'
+               sh 'docker build . --no-cache -t saadmd29/php:v1'
             }
         }
         stage('pushing image to hub') { 
             steps {
                sh ' docker  login --username  saadmd29 --password "Azian@123" && docker push saadmd29/php:v1 ' 
             }
-		post {
-		    success {
-                    echo 'Now Archiving...'
-                    archiveArtifacts artifacts: '**/target/*.war'
-        // Building Docker images
-        stage('Building image') { 
+        }
+        stage('Deploying changes') { 
             steps {
-              script {
-              dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+               sh 'kubectl apply -f deploy.yml && kubectl get svc'
             }
         }
-        stage ('pushing image to hub') {
+        stage ('verifying deployment') {
             steps {
-            sh 'docker  login --username  saadmd29 --password "Azian@123" && docker push saadmd29/test:v1'
+            sh 'kubectl get deploy test-springboot'
             }
         }
     }
